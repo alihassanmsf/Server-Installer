@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 ## Usage
 ```bash
-python server_installer.py
+python ServerInstaller.py
 ```
 
 
