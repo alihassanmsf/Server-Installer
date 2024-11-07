@@ -58,7 +58,6 @@ def connect_to_server(host, username, password=None, key_file=None, retries=3):
 
 # Execute a command on the server and handle sudo with password input
 def execute_command(client, command, host, username, password="", description=""):
-    """Execute a command on the server with error handling and re-run options."""
     try:
         if "sudo" in command:
             command = f"echo {password} | sudo -S bash -c \"{command}\""
@@ -85,6 +84,56 @@ def execute_command(client, command, host, username, password="", description=""
         client.connect(host, username=username, password=password)
         time.sleep(1)
         return execute_command(client, command, host, username, password, description)
+
+
+# Install a database
+def install_database(client, db_choice, password):
+    db_commands = {
+        "mysql": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y mysql-server",
+        "postgresql": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y postgresql",
+        "mongodb": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y mongodb"
+    }
+    if db_choice in db_commands:
+        execute_command(client, db_commands[db_choice], "", f"Installing {db_choice}")
+    else:
+        print(f"{db_choice} is not a valid database choice.")
+
+
+# Uninstall a database
+def uninstall_database(client, db_choice, password):
+    db_commands = {
+        "mysql": f"echo {password} | sudo -S apt remove -y mysql-server && echo {password} | sudo -S apt autoremove -y",
+        "postgresql": f"echo {password} | sudo -S apt remove -y postgresql && echo {password} | sudo -S apt autoremove -y",
+        "mongodb": f"echo {password} | sudo -S apt remove -y mongodb && echo {password} | sudo -S apt autoremove -y"
+    }
+    if db_choice in db_commands:
+        execute_command(client, db_commands[db_choice], "", f"Uninstalling {db_choice}")
+    else:
+        print(f"{db_choice} is not a valid database choice.")
+
+
+# Install a web server
+def install_web_server(client, server_choice, password):
+    server_commands = {
+        "nginx": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y nginx",
+        "apache": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y apache2"
+    }
+    if server_choice in server_commands:
+        execute_command(client, server_commands[server_choice], "", f"Installing {server_choice}")
+    else:
+        print(f"{server_choice} is not a valid web server choice.")
+
+
+# Uninstall a web server
+def uninstall_web_server(client, server_choice, password):
+    server_commands = {
+        "nginx": f"echo {password} | sudo -S apt remove -y nginx && echo {password} | sudo -S apt autoremove -y",
+        "apache": f"echo {password} | sudo -S apt remove -y apache2 && echo {password} | sudo -S apt autoremove -y"
+    }
+    if server_choice in server_commands:
+        execute_command(client, server_commands[server_choice], "", f"Uninstalling {server_choice}")
+    else:
+        print(f"{server_choice} is not a valid web server choice.")
 
 
 # Dashboard to display server health and summary
@@ -249,6 +298,53 @@ def configure_https(client, server_type, domain, password):
     renew_test_command = "certbot renew --dry-run"
     execute_command(client, renew_test_command, password, "Testing Certbot auto-renewal")
 
+# Install Utilities
+def install_utility(client, utility_choice, password):
+    utility_commands = {
+        "git": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y git",
+        "htop": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y htop",
+        "curl": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y curl"
+    }
+    if utility_choice in utility_commands:
+        execute_command(client, utility_commands[utility_choice], "", f"Installing {utility_choice}")
+    else:
+        print(f"{utility_choice} is not a valid utility choice.")
+
+# Uninstall Utilities
+def uninstall_utility(client, utility_choice, password):
+    utility_commands = {
+        "git": f"echo {password} | sudo -S apt remove -y git && echo {password} | sudo -S apt autoremove -y",
+        "htop": f"echo {password} | sudo -S apt remove -y htop && echo {password} | sudo -S apt autoremove -y",
+        "curl": f"echo {password} | sudo -S apt remove -y curl && echo {password} | sudo -S apt autoremove -y"
+    }
+    if utility_choice in utility_commands:
+        execute_command(client, utility_commands[utility_choice], "", f"Uninstalling {utility_choice}")
+    else:
+        print(f"{utility_choice} is not a valid utility choice.")
+
+# Install Programming Languages
+def install_language(client, lang_choice, password):
+    language_commands = {
+        "python3": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y python3",
+        "nodejs": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y nodejs",
+        "php": f"echo {password} | sudo -S apt update && echo {password} | sudo -S apt install -y php"
+    }
+    if lang_choice in language_commands:
+        execute_command(client, language_commands[lang_choice], "", f"Installing {lang_choice}")
+    else:
+        print(f"{lang_choice} is not a valid programming language choice.")
+
+# Uninstall Programming Languages
+def uninstall_language(client, lang_choice, password):
+    language_commands = {
+        "python3": f"echo {password} | sudo -S apt remove -y python3 && echo {password} | sudo -S apt autoremove -y",
+        "nodejs": f"echo {password} | sudo -S apt remove -y nodejs && echo {password} | sudo -S apt autoremove -y",
+        "php": f"echo {password} | sudo -S apt remove -y php && echo {password} | sudo -S apt autoremove -y"
+    }
+    if lang_choice in language_commands:
+        execute_command(client, language_commands[lang_choice], "", f"Uninstalling {lang_choice}")
+    else:
+        print(f"{lang_choice} is not a valid programming language choice.")
 
 # Main function
 def main():
@@ -279,7 +375,39 @@ def main():
         action = input(
             "\nChoose action (install/uninstall/configure_https/dashboard/logs/backup/monitor/exit): ").lower()
         if action == "install":
-            print("Installation options...")
+            install_type = input("What would you like to install? (database/web_server/utility/language): ").lower()
+            if install_type == "database":
+                db_choice = input("Enter the database to install (mysql/postgresql/mongodb): ").lower()
+                install_database(client, db_choice, password)
+            elif install_type == "web_server":
+                server_choice = input("Enter the web server to install (nginx/apache): ").lower()
+                install_web_server(client, server_choice, password)
+            elif install_type == "utility":
+                utility_choice = input("Enter the utility to install (git/htop/curl): ").lower()
+                install_utility(client, utility_choice, password)
+            elif install_type == "language":
+                lang_choice = input("Enter the programming language to install (python3/nodejs/php): ").lower()
+                install_language(client, lang_choice, password)
+            else:
+                print("Invalid install type. Please choose 'database', 'web_server', 'utility', or 'language'.")
+
+        elif action == "uninstall":
+            uninstall_type = input("What would you like to uninstall? (database/web_server/utility/language): ").lower()
+            if uninstall_type == "database":
+                db_choice = input("Enter the database to uninstall (mysql/postgresql/mongodb): ").lower()
+                uninstall_database(client, db_choice, password)
+            elif uninstall_type == "web_server":
+                server_choice = input("Enter the web server to uninstall (nginx/apache): ").lower()
+                uninstall_web_server(client, server_choice, password)
+            elif uninstall_type == "utility":
+                utility_choice = input("Enter the utility to uninstall (git/htop/curl): ").lower()
+                uninstall_utility(client, utility_choice, password)
+            elif uninstall_type == "language":
+                lang_choice = input("Enter the programming language to uninstall (python3/nodejs/php): ").lower()
+                uninstall_language(client, lang_choice, password)
+            else:
+                print("Invalid uninstall type. Please choose 'database', 'web_server', 'utility', or 'language'.")
+
         elif action == "dashboard":
             display_dashboard(client)
         elif action == "backup":
@@ -305,3 +433,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
